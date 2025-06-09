@@ -15,22 +15,15 @@ const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  const playSound = () => {
-    // Add your sound effect here if desired
-  };
-
   const canSpin = rewardsAvailable > 0;
 
   const spin = () => {
     if (!canSpin) return;
 
-    playSound();
     setIsSpinning(true);
 
     setTimeout(() => {
-      // Limit max tier to 3, fallback to 1 if somehow 0
       const tier = Math.min(Math.max(rewardsAvailable, 1), 3);
-
       const rewardList = REWARDS[tier];
       const reward = rewardList[Math.floor(Math.random() * rewardList.length)];
 
