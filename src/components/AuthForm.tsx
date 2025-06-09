@@ -1,18 +1,33 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { supabase } from '../supabaseClient';
+
+const SITE_KEY = 'your-hcaptcha-site-key'; // replace this with your actual site key
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const hcaptchaRef = useRef<any>(null);
 
   const handleLogin = async () => {
+    if (!captchaToken) {
+      setMessage('Please complete the captcha first.');
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setMessage(error ? error.message : 'Logged in successfully');
     if (!error) window.location.href = '/dashboard';
   };
 
   const handleRegister = async () => {
+    if (!captchaToken) {
+      setMessage('Please complete the captcha first.');
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({ email, password });
     setMessage(error ? error.message : 'Registered successfully. Check your email.');
   };
@@ -63,17 +78,31 @@ const AuthForm = () => {
         onChange={(e) => setPassword(e.target.value)}
         style={{ display: 'block', marginBottom: 10 }}
       />
-      <button onClick={handleLogin}>Login</button>
-      <button onClick={handleRegister} style={{ marginLeft: 10 }}>
+
+      <HCaptcha
+        sitekey={SITE_KEY}
+        onVerify={(token) => {
+          setCaptchaToken(token);
+          setMessage('');
+        }}
+        onExpire={() => setCaptchaToken(null)}
+        ref={hcaptchaRef}
+      />
+
+      <button onClick={handleLogin} disabled={!captchaToken} style={{ marginTop: 10 }}>
+        Login
+      </button>
+      <button onClick={handleRegister} style={{ marginLeft: 10 }} disabled={!captchaToken}>
         Register
       </button>
+
       <div style={{ marginTop: 20 }}>
         <button onClick={handleGuest}>Continue as Guest</button>
       </div>
+
       {message && <p style={{ marginTop: 20 }}>{message}</p>}
     </div>
   );
 };
 
 export default AuthForm;
-
