@@ -89,25 +89,16 @@ export default function Dashboard({ user }: DashboardProps) {
     setBehaviors([]);
   };
 
-  // Calculate total points and how many rewards earned:
   const totalPoints = behaviors.reduce((sum, b) => sum + b.points, 0);
-
-  // Set threshold points per reward:
   const threshold = 100;
-
-  // Calculate how many whole rewards user earned:
-  const rewardsEarned = Math.floor(totalPoints / threshold);
-
-  // Calculate progress within current reward tier:
+  const rewardsAvailable = Math.floor(totalPoints / threshold);
   const progressPoints = totalPoints % threshold;
-
-  // Points until next reward:
   const pointsUntilReward = threshold - progressPoints;
 
   return (
     <div style={{ padding: '2rem' }}>
       <SpinWheel
-        rewardsAvailable={rewardsEarned}
+        rewardsAvailable={rewardsAvailable}
         pointsUntilReward={pointsUntilReward}
       />
       <RewardTracker behaviors={behaviors} threshold={threshold} />
