@@ -64,8 +64,8 @@ export default function Dashboard({ user }: DashboardProps) {
         child_id: selectedChild,
         reason: newBehavior.reason,
         points: newBehavior.points,
-        type: newBehavior.type,
-      },
+        type: newBehavior.type
+      }
     ]);
     fetchBehaviors(selectedChild);
     setNewBehavior({ reason: '', points: 0, type: 'positive' });
@@ -82,29 +82,34 @@ export default function Dashboard({ user }: DashboardProps) {
   };
 
   const deleteUser = async () => {
-    await supabase.auth.signOut();
     await supabase.from('children').delete().eq('user_id', user.id);
+    await supabase.auth.signOut();
     setChildren([]);
     setSelectedChild('');
     setBehaviors([]);
   };
 
+  // Calculate total points and how many rewards earned:
   const totalPoints = behaviors.reduce((sum, b) => sum + b.points, 0);
+
+  // Set threshold points per reward:
   const threshold = 100;
 
-  // Number of full rewards earned
-  const rewardsAvailable = Math.floor(totalPoints / threshold);
+  // Calculate how many whole rewards user earned:
+  const rewardsEarned = Math.floor(totalPoints / threshold);
 
-  // Progress into current tier
-  const progressInTier = totalPoints % threshold;
+  // Calculate progress within current reward tier:
+  const progressPoints = totalPoints % threshold;
 
-  // Points until next reward (0 if rewards available)
-  const pointsUntilReward = rewardsAvailable > 0 ? 0 : threshold - progressInTier;
+  // Points until next reward:
+  const pointsUntilReward = threshold - progressPoints;
 
   return (
     <div style={{ padding: '2rem' }}>
-      <SpinWheel rewardsAvailable={rewardsAvailable} pointsUntilReward={pointsUntilReward} />
-
+      <SpinWheel
+        rewardsAvailable={rewardsEarned}
+        pointsUntilReward={pointsUntilReward}
+      />
       <RewardTracker behaviors={behaviors} threshold={threshold} />
 
       <h2>Welcome, {user.email}</h2>
@@ -178,8 +183,9 @@ export default function Dashboard({ user }: DashboardProps) {
               </li>
             ))}
           </ul>
-          <p>Total Points: {totalPoints} | Rewards Available: {rewardsAvailable}</p>
-          <p>Reward Progress: {totalPoints} / {threshold}</p>
+          <p>
+            Total Points: {totalPoints} | Progress Toward Reward: {progressPoints} / {threshold} points
+          </p>
           <p>Points until next reward: {pointsUntilReward}</p>
         </>
       )}
