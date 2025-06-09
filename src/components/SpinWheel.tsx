@@ -7,8 +7,8 @@ const REWARDS = {
 };
 
 type SpinWheelProps = {
-  rewardsAvailable: number;
-  pointsUntilReward: number;
+  rewardsAvailable: number;      // Number of rewards user can spin for
+  pointsUntilReward: number;     // Points needed to next reward (for UI)
 };
 
 const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
@@ -23,6 +23,7 @@ const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
     setIsSpinning(true);
 
     setTimeout(() => {
+      // Determine tier capped between 1 and 3:
       const tier = Math.min(Math.max(rewardsAvailable, 1), 3);
       const rewardList = REWARDS[tier];
       const reward = rewardList[Math.floor(Math.random() * rewardList.length)];
