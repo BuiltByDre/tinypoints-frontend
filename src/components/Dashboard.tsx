@@ -117,14 +117,13 @@ export default function Dashboard({ user }: DashboardProps) {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <h2>Welcome, {user.email}</h2>
       <SpinWheel
         rewardsAvailable={rewardsAvailable}
         pointsUntilReward={pointsUntilReward}
         onSpinComplete={handleSpinComplete}
       />
       <RewardTracker behaviors={behaviors} threshold={threshold} />
-
-      <h2>Welcome, {user.email}</h2>
 
       <h3>Add a Child</h3>
       <input
