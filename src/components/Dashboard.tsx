@@ -95,7 +95,9 @@ export default function Dashboard({ user }: DashboardProps) {
   const progressPoints = totalPoints % threshold;
   const pointsUntilReward = threshold - progressPoints;
 
-  const handleSpinComplete = () => {
+  const handleSpinComplete = async () => {
+    if (!selectedChild) return;
+
     const updated = [...behaviors];
     let remaining = threshold;
 
@@ -105,6 +107,8 @@ export default function Dashboard({ user }: DashboardProps) {
         const deduction = Math.min(b.points, remaining);
         updated[i].points -= deduction;
         remaining -= deduction;
+
+        await supabase.from('behaviors').update({ points: updated[i].points }).eq('id', b.id);
       }
     }
 
