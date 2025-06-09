@@ -50,6 +50,10 @@ export default function Dashboard({ user }: DashboardProps) {
   const deleteChild = async (id: string) => {
     await supabase.from('children').delete().eq('id', id);
     setChildren(children.filter(c => c.id !== id));
+    if (selectedChild === id) {
+      setSelectedChild('');
+      setBehaviors([]);
+    }
   };
 
   const logBehavior = async () => {
@@ -60,8 +64,8 @@ export default function Dashboard({ user }: DashboardProps) {
         child_id: selectedChild,
         reason: newBehavior.reason,
         points: newBehavior.points,
-        type: newBehavior.type
-      }
+        type: newBehavior.type,
+      },
     ]);
     fetchBehaviors(selectedChild);
     setNewBehavior({ reason: '', points: 0, type: 'positive' });
@@ -82,16 +86,24 @@ export default function Dashboard({ user }: DashboardProps) {
     await supabase.from('children').delete().eq('user_id', user.id);
     setChildren([]);
     setSelectedChild('');
+    setBehaviors([]);
   };
 
   const totalPoints = behaviors.reduce((sum, b) => sum + b.points, 0);
   const threshold = 100;
+
+  // Number of full rewards earned
+  const rewardsAvailable = Math.floor(totalPoints / threshold);
+
+  // Progress into current tier
   const progressInTier = totalPoints % threshold;
-  const pointsUntilReward = Math.max(threshold - progressInTier, 0);
+
+  // Points until next reward (0 if rewards available)
+  const pointsUntilReward = rewardsAvailable > 0 ? 0 : threshold - progressInTier;
 
   return (
     <div style={{ padding: '2rem' }}>
-      <SpinWheel totalPoints={progressInTier} threshold={threshold} />
+      <SpinWheel rewardsAvailable={rewardsAvailable} pointsUntilReward={pointsUntilReward} />
 
       <RewardTracker behaviors={behaviors} threshold={threshold} />
 
@@ -111,10 +123,12 @@ export default function Dashboard({ user }: DashboardProps) {
         {children.map((child) => (
           <li key={child.id}>
             {child.name}{' '}
-            <button onClick={() => {
-              setSelectedChild(child.id);
-              fetchBehaviors(child.id);
-            }}>
+            <button
+              onClick={() => {
+                setSelectedChild(child.id);
+                fetchBehaviors(child.id);
+              }}
+            >
               View Behaviors
             </button>{' '}
             <button onClick={() => deleteChild(child.id)}>Delete Child</button>
@@ -164,9 +178,8 @@ export default function Dashboard({ user }: DashboardProps) {
               </li>
             ))}
           </ul>
-          <p>
-            Total Points: {totalPoints} | Progress Toward Reward: {progressInTier} / {threshold} points
-          </p>
+          <p>Total Points: {totalPoints} | Rewards Available: {rewardsAvailable}</p>
+          <p>Reward Progress: {totalPoints} / {threshold}</p>
           <p>Points until next reward: {pointsUntilReward}</p>
         </>
       )}
