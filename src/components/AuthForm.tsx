@@ -21,7 +21,7 @@ export default function AuthForm() {
     const guestEmail = `guest+${random}@tinypoints.io`;
     const guestPassword = 'guest1234';
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: guestEmail,
       password: guestPassword,
     });
