@@ -1,59 +1,49 @@
 import { useState } from 'react';
 
-const REWARDS: Record<number, string[]> = {
-  1: ['Extra 15 minutes of screen time', 'Favorite snack', 'Sticker'],
-  2: ['Choose dinner', 'Small toy', 'Game time'],
-  3: ['Trip to park', 'New book', 'Movie night'],
-};
-
-type SpinWheelProps = {
+export type SpinWheelProps = {
   rewardsAvailable: number;
   pointsUntilReward: number;
-  onSpinComplete: () => void;
+  onSpinComplete?: () => void;
 };
 
-const SpinWheel = ({ rewardsAvailable, pointsUntilReward, onSpinComplete }: SpinWheelProps) => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+const rewardOptions = [
+  'Ice Cream 🍦',
+  'Extra Screen Time 📱',
+  'Trip to the Park 🛝',
+  'Pick a Movie 🎥',
+  'Special Snack 🍪',
+  'Stay Up Late 🌙',
+  'Sticker 🎖️',
+  'Game Time 🎮',
+];
 
-  const canSpin = rewardsAvailable > 0 && !isSpinning;
+export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinComplete }: SpinWheelProps) {
+  const [spinning, setSpinning] = useState(false);
+  const [lastReward, setLastReward] = useState<string | null>(null);
+  const [spinsLeft, setSpinsLeft] = useState(rewardsAvailable);
 
   const spin = () => {
-    if (!canSpin) return;
+    if (spinning || spinsLeft <= 0) return;
 
-    setIsSpinning(true);
-
+    setSpinning(true);
+    const reward = rewardOptions[Math.floor(Math.random() * rewardOptions.length)];
     setTimeout(() => {
-      const tier = Math.min(Math.max(rewardsAvailable, 1), 3);
-      const rewardList = REWARDS[tier];
-      const reward = rewardList[Math.floor(Math.random() * rewardList.length)];
-
-      setResult(reward);
-      setIsSpinning(false);
-      onSpinComplete(); // Deduct 100 points after spin
-    }, 1000);
+      setLastReward(reward);
+      setSpinning(false);
+      setSpinsLeft(spinsLeft - 1);
+      if (onSpinComplete) onSpinComplete();
+    }, 2000);
   };
 
   return (
-    <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-      <h3>🎉 Spin the Reward Wheel!</h3>
-      <button onClick={spin} disabled={!canSpin}>
-        {isSpinning ? 'Spinning...' : 'Spin'}
+    <div style={{ marginBottom: '2rem', padding: '1rem', border: '2px dashed #999', borderRadius: '12px' }}>
+      <h2>🎉 Spin the Reward Wheel!</h2>
+      <p>Spins available: {spinsLeft}</p>
+      <p>Points until next reward: {pointsUntilReward}</p>
+      <button onClick={spin} disabled={spinning || spinsLeft <= 0}>
+        {spinning ? 'Spinning...' : 'Spin'}
       </button>
-
-      {!canSpin && (
-        <p style={{ color: 'gray' }}>
-          Earn {pointsUntilReward} more points to spin!
-        </p>
-      )}
-
-      {result && (
-        <p style={{ marginTop: '1rem' }}>
-          You won: <strong>{result}</strong>!
-        </p>
-      )}
+      {lastReward && <p style={{ marginTop: '1rem' }}>You won: <strong>{lastReward}</strong></p>}
     </div>
   );
-};
-
-export default SpinWheel;
+}
