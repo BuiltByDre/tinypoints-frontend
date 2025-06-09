@@ -1,14 +1,14 @@
 import { useState } from 'react';
 
-const REWARDS = {
-  1: ['Extra 15 minutes of screen time', 'Favorite snack', 'Sticker'],
-  2: ['Choose dinner', 'Small toy', 'Game time'],
-  3: ['Trip to park', 'New book', 'Movie night'],
+const REWARDS: Record<string, string[]> = {
+  '1': ['Extra 15 minutes of screen time', 'Favorite snack', 'Sticker'],
+  '2': ['Choose dinner', 'Small toy', 'Game time'],
+  '3': ['Trip to park', 'New book', 'Movie night'],
 };
 
 type SpinWheelProps = {
-  rewardsAvailable: number;      // Number of rewards user can spin for
-  pointsUntilReward: number;     // Points needed to next reward (for UI)
+  rewardsAvailable: number;
+  pointsUntilReward: number;
 };
 
 const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
@@ -23,9 +23,8 @@ const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
     setIsSpinning(true);
 
     setTimeout(() => {
-      // Determine tier capped between 1 and 3:
       const tier = Math.min(Math.max(rewardsAvailable, 1), 3);
-      const rewardList = REWARDS[tier];
+      const rewardList = REWARDS[String(tier)];
       const reward = rewardList[Math.floor(Math.random() * rewardList.length)];
 
       setResult(reward);
@@ -40,7 +39,11 @@ const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
         {isSpinning ? 'Spinning...' : 'Spin'}
       </button>
 
-      {!canSpin && <p style={{ color: 'gray' }}>Earn {pointsUntilReward} more points to spin!</p>}
+      {!canSpin && (
+        <p style={{ color: 'gray' }}>
+          Earn {pointsUntilReward} more points to spin!
+        </p>
+      )}
 
       {result && (
         <p style={{ marginTop: '1rem' }}>
@@ -51,7 +54,9 @@ const SpinWheel = ({ rewardsAvailable, pointsUntilReward }: SpinWheelProps) => {
       <div style={{ marginTop: '1rem' }}>
         <strong>Reward Progress</strong>
         <br />
-        {rewardsAvailable * 100} / 100 points
+        {rewardsAvailable > 0
+          ? `${rewardsAvailable * 100} / 100 points`
+          : `${100 - pointsUntilReward} / 100 points`}
       </div>
     </div>
   );
