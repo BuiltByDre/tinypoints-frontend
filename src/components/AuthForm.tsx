@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { guestLogin } from '../utils/guestAuth';
 
 export default function AuthForm() {
   const [email, setEmail] = useState('');
@@ -16,25 +17,16 @@ export default function AuthForm() {
     setMessage(error ? error.message : 'Registered successfully. Check your email.');
   };
 
+  // Updated guest login handler using guestLogin utility function
   const handleGuest = async () => {
-    const random = Math.random().toString(36).slice(2, 10);
-    const guestEmail = `guest+${random}@tinypoints.io`;
-    const guestPassword = 'guest1234';
-
-    const { error } = await supabase.auth.signUp({
-      email: guestEmail,
-      password: guestPassword,
-    });
-
-    if (error && !error.message.includes('already registered')) {
-      setMessage(error.message);
-    } else {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: guestEmail,
-        password: guestPassword,
-      });
-      setMessage(loginError ? loginError.message : 'Guest login successful!');
+    setMessage('Logging in as guest...');
+    const session = await guestLogin();
+    if (session) {
+      setMessage('Guest login successful!');
       localStorage.setItem('isGuest', 'true');
+      window.location.href = '/dashboard';
+    } else {
+      setMessage('Failed to login as guest.');
     }
   };
 
