@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { guestLogin } from '../utils/guestAuth';
+import { guestLogin } from '../utils/guestAuth.ts';
 
 export default function AuthForm() {
   const [email, setEmail] = useState('');
