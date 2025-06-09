@@ -1,47 +1,34 @@
+// src/utils/guestAuth.ts
 import { supabase } from '../supabaseClient';
 
-function generateRandomEmail() {
-  return `guest_${Math.random().toString(36).substring(2, 10)}@example.com`;
-}
-
-function generateRandomPassword() {
-  return Math.random().toString(36).slice(-8) + 'A1!'; // Simple strong-ish password
-}
-
 export async function guestLogin() {
-  const email = generateRandomEmail();
-  const password = generateRandomPassword();
+  const random = Math.random().toString(36).substring(2, 10);
+  const guestEmail = `guest+${random}@tinypoints.io`;
+  const guestPassword = 'guest1234';
 
-  // Sign up guest user
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        guest: true,
-        created_at: new Date().toISOString(),
-      },
-    },
+  // Try to sign up the guest user
+  const signUpResponse = await supabase.auth.signUp({
+    email: guestEmail,
+    password: guestPassword,
   });
 
-  if (error) {
-    console.error('Guest signup error:', error.message);
+  // If the error is something other than "already registered"
+  if (signUpResponse.error && !signUpResponse.error.message.includes('already registered')) {
+    console.error('Signup error:', signUpResponse.error.message);
     return null;
   }
 
-  // Sign in the guest user
-  const { session, error: signInError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+  // Now try to sign in
+  const signInResponse = await supabase.auth.signInWithPassword({
+    email: guestEmail,
+    password: guestPassword,
   });
 
-  if (signInError) {
-    console.error('Guest signin error:', signInError.message);
+  if (signInResponse.error) {
+    console.error('Sign-in error:', signInResponse.error.message);
     return null;
   }
 
-  // Mark localStorage for guest session
-  localStorage.setItem('isGuest', 'true');
-
-  return session;
+  const { session } = signInResponse.data;
+  return session ?? null;
 }
