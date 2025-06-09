@@ -1,14 +1,14 @@
 import { useState } from 'react';
 
-type SpinWheelProps = {
-  totalPoints: number;
-  threshold: number;
-};
-
 const REWARDS: Record<number, string[]> = {
   1: ['Sticker', 'Extra Play Time', 'Small Treat'],
   2: ['Trip to Park', 'Small Toy', 'Ice Cream'],
   3: ['Movie Night', 'Stay Up Late', 'Game Time'],
+};
+
+type SpinWheelProps = {
+  totalPoints: number;
+  threshold: number;
 };
 
 const SpinWheel = ({ totalPoints, threshold }: SpinWheelProps) => {
@@ -23,15 +23,26 @@ const SpinWheel = ({ totalPoints, threshold }: SpinWheelProps) => {
   };
 
   const spin = () => {
-    if (!canSpin) return; // safeguard
+    if (!canSpin) return;
 
     playSound();
     setIsSpinning(true);
 
     setTimeout(() => {
-      const tier = Math.floor(Math.random() * 3) + 1;
+      // Determine reward tier based on how many thresholds are met
+      // For simplicity, assume tier 1 if threshold met once,
+      // tier 2 if threshold met twice, tier 3 if thrice or more
+
+      // Calculate how many full thresholds completed:
+      const fullTiers = Math.floor(totalPoints / threshold);
+      let tier = 1;
+      if (fullTiers === 1) tier = 1;
+      else if (fullTiers === 2) tier = 2;
+      else if (fullTiers >= 3) tier = 3;
+
       const rewardList = REWARDS[tier];
       const reward = rewardList[Math.floor(Math.random() * rewardList.length)];
+
       setResult(reward);
       setIsSpinning(false);
     }, 1000);
@@ -41,15 +52,11 @@ const SpinWheel = ({ totalPoints, threshold }: SpinWheelProps) => {
     <div style={{ marginTop: '2rem', textAlign: 'center' }}>
       <h3>🎉 Spin the Reward Wheel!</h3>
 
-      {!canSpin && (
-        <p style={{ color: 'red' }}>
-          You need at least {threshold} points to spin the wheel. Keep going!
-        </p>
-      )}
-
       <button onClick={spin} disabled={isSpinning || !canSpin}>
         {isSpinning ? 'Spinning...' : 'Spin'}
       </button>
+
+      {!canSpin && <p style={{ color: 'gray' }}>Earn {threshold - totalPoints} more points to spin!</p>}
 
       {result && (
         <p style={{ marginTop: '1rem' }}>
