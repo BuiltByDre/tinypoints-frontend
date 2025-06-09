@@ -7,14 +7,14 @@ export type SpinWheelProps = {
 };
 
 const rewardOptions = [
-  'Ice Cream 🍦',
-  'Extra Screen Time 📱',
-  'Trip to the Park 🛝',
-  'Pick a Movie 🎥',
-  'Special Snack 🍪',
-  'Stay Up Late 🌙',
-  'Sticker 🎖️',
-  'Game Time 🎮',
+  { label: 'Ice Cream 🍦', emoji: '🍦' },
+  { label: 'Extra Screen Time 📱', emoji: '📱' },
+  { label: 'Trip to the Park 🛝', emoji: '🛝' },
+  { label: 'Pick a Movie 🎥', emoji: '🎥' },
+  { label: 'Special Snack 🍪', emoji: '🍪' },
+  { label: 'Stay Up Late 🌙', emoji: '🌙' },
+  { label: 'Sticker 🎖️', emoji: '🎖️' },
+  { label: 'Game Time 🎮', emoji: '🎮' },
 ];
 
 const segmentCount = rewardOptions.length;
@@ -59,10 +59,10 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
         spinSoundRef.current.currentTime = 0;
       }
 
-      const reward = rewardOptions[winningIndex];
+      const reward = rewardOptions[winningIndex].label;
       setLastReward(reward);
       setSpinning(false);
-      setSpinsLeft(spinsLeft - 1);
+      setSpinsLeft(prev => prev - 1);
 
       if (rewardSoundRef.current) {
         rewardSoundRef.current.currentTime = 0;
@@ -103,6 +103,7 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
 
       <div
         ref={wheelRef}
+        onClick={spin}
         style={{
           margin: '1rem auto',
           width: 300,
@@ -114,14 +115,13 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
           boxShadow: '0 0 10px rgba(0,0,0,0.2)',
           cursor: spinning || spinsLeft <= 0 ? 'not-allowed' : 'pointer',
         }}
-        onClick={spin}
         aria-disabled={spinning || spinsLeft <= 0}
       >
         {rewardOptions.map((reward, i) => {
           const rotation = i * segmentAngle;
           return (
             <div
-              key={reward}
+              key={reward.label}
               style={{
                 position: 'absolute',
                 width: '50%',
@@ -137,7 +137,7 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
                 justifyContent: 'flex-start',
                 paddingLeft: '15px',
                 fontWeight: 'bold',
-                fontSize: 14,
+                fontSize: 20,
                 userSelect: 'none',
               }}
             >
@@ -146,7 +146,7 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
                   transform: `skewY(-${90 - segmentAngle}deg) rotate(${segmentAngle / 2}deg)`,
                 }}
               >
-                {reward}
+                {reward.emoji}
               </span>
             </div>
           );
@@ -168,18 +168,19 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
         />
       </div>
 
-      <button
-        onClick={spin}
-        disabled={spinning || spinsLeft <= 0}
+      <p
         style={{
-          padding: '0.5rem 1.5rem',
-          fontSize: 18,
-          cursor: spinning || spinsLeft <= 0 ? 'not-allowed' : 'pointer',
           marginTop: '1rem',
+          fontSize: 16,
+          color: spinning || spinsLeft <= 0 ? '#888' : '#333',
         }}
       >
-        {spinning ? 'Spinning...' : 'Spin'}
-      </button>
+        {spinning
+          ? 'Spinning...'
+          : spinsLeft > 0
+          ? 'Click the wheel to spin!'
+          : 'No spins left'}
+      </p>
 
       {lastReward && (
         <p style={{ marginTop: '1rem', fontWeight: 'bold', fontSize: 18 }}>
@@ -187,7 +188,6 @@ export default function SpinWheel({ rewardsAvailable, pointsUntilReward, onSpinC
         </p>
       )}
 
-      {/* Audio elements */}
       <audio ref={spinSoundRef} src="/spin-sound.mp3" preload="auto" />
       <audio ref={rewardSoundRef} src="/reward-sound.mp3" preload="auto" />
     </div>
