@@ -87,6 +87,12 @@ export default function Dashboard({ user }: DashboardProps) {
     setChildren([]);
     setSelectedChild('');
     setBehaviors([]);
+    window.location.reload();
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
   };
 
   const totalPoints = behaviors.reduce((sum, b) => sum + b.points, 0);
@@ -118,6 +124,22 @@ export default function Dashboard({ user }: DashboardProps) {
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Welcome, {user.email}</h2>
+
+      <button
+        onClick={logout}
+        style={{
+          marginBottom: '1rem',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#555',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        Logout
+      </button>
+
       <SpinWheel
         rewardsAvailable={rewardsAvailable}
         pointsUntilReward={pointsUntilReward}
@@ -201,7 +223,18 @@ export default function Dashboard({ user }: DashboardProps) {
         </>
       )}
 
-      <button style={{ marginTop: '4rem', backgroundColor: 'red', color: 'white' }} onClick={deleteUser}>
+      <button
+        style={{
+          marginTop: '4rem',
+          backgroundColor: 'red',
+          color: 'white',
+          padding: '0.5rem 1rem',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+        onClick={deleteUser}
+      >
         Delete User Account
       </button>
     </div>
