@@ -9,7 +9,6 @@ const AuthForm = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   const hcaptchaRef = useRef<HCaptcha>(null);
 
@@ -21,7 +20,6 @@ const AuthForm = () => {
         body: JSON.stringify({ token }),
       });
       const data = await res.json();
-      setCaptchaVerified(data.success);
       if (!data.success) setMessage('Captcha verification failed.');
       return data.success;
     } catch (err) {
@@ -104,10 +102,7 @@ const AuthForm = () => {
           setCaptchaToken(token);
           setMessage('');
         }}
-        onExpire={() => {
-          setCaptchaToken(null);
-          setCaptchaVerified(false);
-        }}
+        onExpire={() => setCaptchaToken(null)}
         ref={hcaptchaRef}
       />
 
