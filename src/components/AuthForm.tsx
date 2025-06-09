@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { supabase } from '../supabaseClient';
 
-const SITE_KEY = 'your-hcaptcha-site-key'; // replace this with your actual site key
+const SITE_KEY = 'bf645a8c-c2de-4edc-adc8-1de4002c3a60'; // replace this with your actual site key
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
