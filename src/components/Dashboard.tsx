@@ -58,14 +58,13 @@ export default function Dashboard({ user }: DashboardProps) {
 
   const logBehavior = async () => {
     if (!selectedChild || !newBehavior.reason || newBehavior.points === 0) return;
-
     await supabase.from('behaviors').insert([
       {
         child_id: selectedChild,
         reason: newBehavior.reason,
         points: newBehavior.points,
-        type: newBehavior.type
-      }
+        type: newBehavior.type,
+      },
     ]);
     fetchBehaviors(selectedChild);
     setNewBehavior({ reason: '', points: 0, type: 'positive' });
@@ -81,18 +80,24 @@ export default function Dashboard({ user }: DashboardProps) {
     if (selectedChild) fetchBehaviors(selectedChild);
   };
 
-  const deleteUser = async () => {
-    await supabase.from('children').delete().eq('user_id', user.id);
+  const logoutUser = async () => {
+    if (localStorage.getItem('isGuest') === 'true') {
+      const { data: children } = await supabase.from('children').select('id').eq('user_id', user.id);
+      const childIds = children?.map(c => c.id) || [];
+
+      for (const id of childIds) {
+        await supabase.from('behaviors').delete().eq('child_id', id);
+        await supabase.from('children').delete().eq('id', id);
+      }
+
+      await supabase.auth.admin.deleteUser(user.id);
+      localStorage.removeItem('isGuest');
+    }
+
     await supabase.auth.signOut();
     setChildren([]);
     setSelectedChild('');
     setBehaviors([]);
-    window.location.reload();
-  };
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    window.location.reload();
   };
 
   const totalPoints = behaviors.reduce((sum, b) => sum + b.points, 0);
@@ -113,7 +118,6 @@ export default function Dashboard({ user }: DashboardProps) {
         const deduction = Math.min(b.points, remaining);
         updated[i].points -= deduction;
         remaining -= deduction;
-
         await supabase.from('behaviors').update({ points: updated[i].points }).eq('id', b.id);
       }
     }
@@ -124,22 +128,6 @@ export default function Dashboard({ user }: DashboardProps) {
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Welcome, {user.email}</h2>
-
-      <button
-        onClick={logout}
-        style={{
-          marginBottom: '1rem',
-          padding: '0.5rem 1rem',
-          backgroundColor: '#555',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
-      >
-        Logout
-      </button>
-
       <SpinWheel
         rewardsAvailable={rewardsAvailable}
         pointsUntilReward={pointsUntilReward}
@@ -223,20 +211,11 @@ export default function Dashboard({ user }: DashboardProps) {
         </>
       )}
 
-      <button
-        style={{
-          marginTop: '4rem',
-          backgroundColor: 'red',
-          color: 'white',
-          padding: '0.5rem 1rem',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
-        onClick={deleteUser}
-      >
-        Delete User Account
-      </button>
+      <div style={{ marginTop: '4rem' }}>
+        <button onClick={logoutUser} style={{ backgroundColor: 'black', color: 'white' }}>
+          Log Out
+        </button>
+      </div>
     </div>
   );
 }
