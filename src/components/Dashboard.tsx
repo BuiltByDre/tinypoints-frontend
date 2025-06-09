@@ -90,7 +90,7 @@ export default function Dashboard({ user }: DashboardProps) {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <SpinWheel />
+      <SpinWheel totalPoints={totalPoints} threshold={threshold} />
       <RewardTracker behaviors={behaviors} threshold={threshold} />
 
       <h2>Welcome, {user.email}</h2>
