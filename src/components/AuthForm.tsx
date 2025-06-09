@@ -32,7 +32,7 @@ const AuthForm = () => {
       return;
     }
 
-    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+    const { error: loginError } = await supabase.auth.signInWithPassword({
       email: guestEmail,
       password: guestPassword,
     });
