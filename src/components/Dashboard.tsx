@@ -86,11 +86,13 @@ export default function Dashboard({ user }: DashboardProps) {
 
   const totalPoints = behaviors.reduce((sum, b) => sum + b.points, 0);
   const threshold = 100;
-  const pointsUntilReward = Math.max(threshold - (totalPoints % threshold), 0);
+  const progressInTier = totalPoints % threshold;
+  const pointsUntilReward = Math.max(threshold - progressInTier, 0);
 
   return (
     <div style={{ padding: '2rem' }}>
-      <SpinWheel totalPoints={totalPoints} threshold={threshold} />
+      <SpinWheel totalPoints={progressInTier} threshold={threshold} />
+
       <RewardTracker behaviors={behaviors} threshold={threshold} />
 
       <h2>Welcome, {user.email}</h2>
@@ -109,12 +111,10 @@ export default function Dashboard({ user }: DashboardProps) {
         {children.map((child) => (
           <li key={child.id}>
             {child.name}{' '}
-            <button
-              onClick={() => {
-                setSelectedChild(child.id);
-                fetchBehaviors(child.id);
-              }}
-            >
+            <button onClick={() => {
+              setSelectedChild(child.id);
+              fetchBehaviors(child.id);
+            }}>
               View Behaviors
             </button>{' '}
             <button onClick={() => deleteChild(child.id)}>Delete Child</button>
@@ -164,7 +164,10 @@ export default function Dashboard({ user }: DashboardProps) {
               </li>
             ))}
           </ul>
-          <p>Total Points: {totalPoints} | Points until reward: {pointsUntilReward}</p>
+          <p>
+            Total Points: {totalPoints} | Progress Toward Reward: {progressInTier} / {threshold} points
+          </p>
+          <p>Points until next reward: {pointsUntilReward}</p>
         </>
       )}
 
