@@ -2,14 +2,16 @@ import { useState, useRef } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { supabase } from '../supabaseClient';
 
-const SITE_KEY = 'bf645a8c-c2de-4edc-adc8-1de4002c3a60'; // replace this with your actual site key
+const SITE_KEY = 'bf645a8c-c2de-4edc-adc8-1de4002c3a60'; // replace with your actual site key
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const hcaptchaRef = useRef<any>(null);
+
+  // Use React.RefObject for better typing
+  const hcaptchaRef = useRef<HCaptcha>(null);
 
   const handleLogin = async () => {
     if (!captchaToken) {
@@ -81,7 +83,7 @@ const AuthForm = () => {
 
       <HCaptcha
         sitekey={SITE_KEY}
-        onVerify={(token) => {
+        onVerify={(token: string) => {
           setCaptchaToken(token);
           setMessage('');
         }}
