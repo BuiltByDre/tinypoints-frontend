@@ -2,22 +2,39 @@ import { useState, useRef } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { supabase } from '../supabaseClient';
 
-const SITE_KEY = 'bf645a8c-c2de-4edc-adc8-1de4002c3a60'; // replace with your actual site key
+const SITE_KEY = 'bf645a8c-c2de-4edc-adc8-1de4002c3a60';
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
-  // Use React.RefObject for better typing
   const hcaptchaRef = useRef<HCaptcha>(null);
 
-  const handleLogin = async () => {
-    if (!captchaToken) {
-      setMessage('Please complete the captcha first.');
-      return;
+  const verifyCaptcha = async (token: string) => {
+    try {
+      const res = await fetch('http://localhost:5000/verify-captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      setCaptchaVerified(data.success);
+      if (!data.success) setMessage('Captcha verification failed.');
+      return data.success;
+    } catch (err) {
+      setMessage('Captcha verification error.');
+      return false;
     }
+  };
+
+  const handleLogin = async () => {
+    if (!captchaToken) return setMessage('Please complete the captcha first.');
+
+    const valid = await verifyCaptcha(captchaToken);
+    if (!valid) return;
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setMessage(error ? error.message : 'Logged in successfully');
@@ -25,10 +42,10 @@ const AuthForm = () => {
   };
 
   const handleRegister = async () => {
-    if (!captchaToken) {
-      setMessage('Please complete the captcha first.');
-      return;
-    }
+    if (!captchaToken) return setMessage('Please complete the captcha first.');
+
+    const valid = await verifyCaptcha(captchaToken);
+    if (!valid) return;
 
     const { error } = await supabase.auth.signUp({ email, password });
     setMessage(error ? error.message : 'Registered successfully. Check your email.');
@@ -87,14 +104,17 @@ const AuthForm = () => {
           setCaptchaToken(token);
           setMessage('');
         }}
-        onExpire={() => setCaptchaToken(null)}
+        onExpire={() => {
+          setCaptchaToken(null);
+          setCaptchaVerified(false);
+        }}
         ref={hcaptchaRef}
       />
 
       <button onClick={handleLogin} disabled={!captchaToken} style={{ marginTop: 10 }}>
         Login
       </button>
-      <button onClick={handleRegister} style={{ marginLeft: 10 }} disabled={!captchaToken}>
+      <button onClick={handleRegister} disabled={!captchaToken} style={{ marginLeft: 10 }}>
         Register
       </button>
 
