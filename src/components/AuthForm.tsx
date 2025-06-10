@@ -1,47 +1,78 @@
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { supabase } from '../supabaseClient';
+import { AuthError } from '@supabase/supabase-js';
+
+// Define the type for the hCaptcha verification response from your backend
+interface VerifyCaptchaResponse {
+  success: boolean;
+  'error-codes'?: string[]; // Optional property for hCaptcha error codes
+}
 
 const AuthForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [message, setMessage] = useState('');
+  // State variables for form inputs and messages, explicitly typed as strings
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+
+  // Get backend URL from environment variables.
+  // Use 'import.meta.env.VITE_BACKEND_URL' for Vite projects,
+  // or 'process.env.REACT_APP_BACKEND_URL' for Create React App projects.
+  // Render will pick this up from your environment variables set in its dashboard.
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
 
   const handleLogin = async () => {
+    // Basic validation: ensure backend URL is configured
+    if (!backendUrl) {
+      setMessage('Backend URL is not configured. Please set REACT_APP_BACKEND_URL (or VITE_BACKEND_URL) in environment variables.');
+      return;
+    }
+
+    // Basic validation: ensure captcha token is present
     if (!captchaToken) {
       setMessage('Please complete the captcha first.');
       return;
     }
 
     try {
-      const verifyRes = await fetch('/verify-captcha', {
+      // Step 1: Verify hCaptcha token with your backend
+      const verifyRes = await fetch(`${backendUrl}/verify-captcha`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: captchaToken }),
       });
 
-      const verifyData = await verifyRes.json();
+      // Parse the JSON response and cast it to the defined interface
+      const verifyData: VerifyCaptchaResponse = await verifyRes.json();
 
+      // Check if the captcha verification was successful
       if (!verifyRes.ok || !verifyData.success) {
         setMessage('Captcha verification failed. Please try again.');
         return;
       }
 
+      // Step 2: Proceed with Supabase authentication after successful captcha verification
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        // Supabase might have an 'options' field to pass additional data like captchaToken,
+        // but it's typically handled by the backend. If your Supabase setup doesn't expect it here,
+        // you can remove this 'options' block.
         options: {
-          captchaToken,
+          captchaToken, // Include captchaToken in options for Supabase, if needed by your RLS policies or custom logic
         },
       });
 
-      setMessage(error ? error.message : 'Logged in successfully');
+      // Update the message based on whether an error occurred
+      // Type assertion 'as AuthError' is used to safely access the 'message' property of the error object
+      setMessage(error ? (error as AuthError).message : 'Logged in successfully');
 
+      // If no error, redirect to the dashboard
       if (!error) {
-        window.location.href = '/dashboard';
+        window.location.href = '/dashboard'; // Redirect on successful login
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) { // Catch block variable type might need 'any' for unknown errors
+      console.error('An error occurred during login process:', err);
       setMessage('An unexpected error occurred. Please try again.');
     }
   };
@@ -52,22 +83,33 @@ const AuthForm = () => {
         type="email"
         placeholder="Email"
         value={email}
-        onChange={e => setEmail(e.target.value)}
+        // Type the event object for onChange handler explicitly for TypeScript
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
         className="input"
       />
       <input
         type="password"
         placeholder="Password"
         value={password}
-        onChange={e => setPassword(e.target.value)}
+        // Type the event object for onChange handler explicitly for TypeScript
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
         className="input"
       />
-      {/* Replace with your actual captcha component or script */}
+      {/*
+        IMPORTANT: This input for 'Captcha Token' is a placeholder for manual entry.
+        In a real application, you would integrate a dedicated hCaptcha component here (e.g., from 'react-hcaptcha').
+        Example of how you might use a react-hcaptcha component:
+        <HCaptcha
+          sitekey="YOUR_HCAPTCHA_SITE_KEY" // Replace with your hCaptcha site key
+          onVerify={setCaptchaToken} // hCaptcha will call this with the token on successful verification
+        />
+      */}
       <input
         type="text"
-        placeholder="Captcha Token"
+        placeholder="Captcha Token (for testing/manual entry)"
         value={captchaToken}
-        onChange={e => setCaptchaToken(e.target.value)}
+        // Type the event object for onChange handler explicitly for TypeScript
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setCaptchaToken(e.target.value)}
         className="input"
       />
       <button onClick={handleLogin} className="btn">
