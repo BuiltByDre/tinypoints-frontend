@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react'; // Added 'type' keyword for ChangeEvent
 import { supabase } from '../supabaseClient';
 import { AuthError } from '@supabase/supabase-js';
 
